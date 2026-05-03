@@ -18,6 +18,7 @@ public:
     bool init(const std::string& title);
     void clear();                                         
     void drawCircle(Vec2 center, float radius, XColor color);  
+    void drawLine(Vec2 start, Vec2 end, XColor color);
     void drawFilledCircle(Vec2 center, float radius, XColor color); 
     void drawBall(const Ball& ball);                       
     void present();                                        

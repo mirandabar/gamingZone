@@ -66,6 +66,7 @@ void Ball::setPosition(Vec2 position)
 void Ball::move()
 {
     this->position = this->position + this->velocity;
+    updateLines();
 }
 
 void Ball::setVelocity(Vec2 velocity)
@@ -73,3 +74,16 @@ void Ball::setVelocity(Vec2 velocity)
     this->velocity = velocity;
 }
 
+void Ball::addLine(const Line& line) {
+    lines.push_back(line);
+}
+
+const std::vector<Line>& Ball::getLines() const {
+    return lines;
+}
+
+void Ball::updateLines() {
+    for (auto& line : lines) {
+        line.setStart(this->position);
+    }
+}

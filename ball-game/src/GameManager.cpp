@@ -1,6 +1,8 @@
 #include "../include/GameManager.h"
 #include "../include/Colours.h"
 #include "../include/Config.h"
+#include "../include/Vec2.h"
+#include "../include/Line.h"
 
 GameManager::GameManager(Renderer& renderer)
     : m_renderer(renderer),
@@ -56,7 +58,16 @@ void GameManager::initializeGame() {
 void GameManager::updateGame() {
     for (auto& ball : m_balls) {
         ball.move();
-        if (m_collisionManager.checkBoundaryCollision(ball, m_arenaCenter, m_arenaRadius)) {
+
+        Vec2 pointColision;
+        bool collision = false;
+
+        pointColision = m_collisionManager.checkBoundaryCollision(ball, m_arenaCenter, m_arenaRadius, collision);
+
+        if (collision) {
+            Line lineConection = Line(ball.getPosition(), pointColision, ball.getColor());
+            ball.addLine(lineConection);
+            m_renderer.drawLine(lineConection.getStart(), lineConection.getEnd(), lineConection.getColor());
             m_collisionManager.resolveBoundaryCollision(ball, m_arenaCenter);
         }
     }
@@ -76,6 +87,9 @@ void GameManager::renderGame() {
 
     for (const auto& ball : m_balls) {
         m_renderer.drawBall(ball);
+        for (const auto& line : ball.getLines()) {
+            m_renderer.drawLine(line.getStart(), line.getEnd(), line.getColor());
+        }
     }
 
     m_renderer.present();

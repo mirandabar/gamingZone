@@ -39,9 +39,18 @@ void CollisionManager::resolveCollision(Ball& ball1, Ball& ball2) const {
     ball2.setPosition(ball2.getPosition() + correction);
 }
 
-bool CollisionManager::checkBoundaryCollision(const Ball& ball, const Vec2& arenaCenter, float arenaRadius) const {
+Vec2 CollisionManager::checkBoundaryCollision(const Ball& ball, const Vec2& arenaCenter, float arenaRadius, bool &collision) const {
     float distance = (ball.getPosition() - arenaCenter).length();
-    return distance + ball.getRadius() > arenaRadius;
+
+    if (distance + ball.getRadius() > arenaRadius) {
+        collision = true;
+        Vec2 normal = (ball.getPosition() - arenaCenter).normalize();
+        Vec2 contactPoint = arenaCenter + normal * arenaRadius;
+        return contactPoint;
+    }
+
+    collision = false;
+    return Vec2(0, 0);
 }
 
 void CollisionManager::resolveBoundaryCollision(Ball& ball, const Vec2& arenaCenter) const {

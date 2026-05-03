@@ -99,6 +99,13 @@ void Renderer::drawCircle(Vec2 center, float radius, XColor color) {
     }
 }
 
+void Renderer::drawLine(Vec2 start, Vec2 end, XColor color) {
+    XSetForeground(m_display, m_gc, color.pixel);
+    XDrawLine(m_display, m_backBuffer, m_gc,
+              (int)start.x, (int)start.y,
+              (int)end.x, (int)end.y);
+}
+
 void Renderer::drawFilledCircle(Vec2 center, float radius, XColor color) {
     XSetForeground(m_display, m_gc, color.pixel);
     int x = (int)(center.x - radius);

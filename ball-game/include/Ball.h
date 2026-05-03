@@ -2,6 +2,8 @@
 
 #include "Vec2.h"
 #include <X11/Xutil.h>
+#include <vector>
+#include "Line.h"
 
 class Ball
 {
@@ -12,6 +14,7 @@ private:
     Vec2 velocity;
     int id; 
     static int nextId;
+    std::vector<Line> lines; // Líneas asociadas a la bola
 
 public:
     Ball(XColor color, float radius, Vec2 position);
@@ -30,5 +33,9 @@ public:
     void setPosition(Vec2 position);
     void setVelocity(Vec2 velocity);
     void move();
+
+    void addLine(const Line& line); 
+    const std::vector<Line>& getLines() const; 
+    void updateLines();
 };
 
