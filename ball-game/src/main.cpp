@@ -1,6 +1,7 @@
 #include "../include/Renderer.h"
 #include "../include/GameManager.h"
 #include "../include/Logger.h"
+#include "../include/Colours.h"
 #include <chrono>
 #include <thread>
 #include <vector>
@@ -29,13 +30,20 @@ int main() {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
         Logger::info(FILE_NAME, "main", "Starting game loop");
-        while (true) {
+        while (gameManager.onlyOneBallLeft() == false) {
             gameManager.updateGame();
             gameManager.renderGame();
             
             // ~60 FPS
             std::this_thread::sleep_for(std::chrono::milliseconds(16));
         }
+
+        XColor winningColor = gameManager.getWinningBallColor();
+        renderer.setScreenColor(winningColor);
+
+        renderer.showMessage("!!! WINNER !!!");
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
         
         Logger::info(FILE_NAME, "main", "========== GAME ENDED NORMALLY ==========");
         return 0;

@@ -6,7 +6,7 @@ SRC = src/*.cpp
 OUT = build/ball-game
 
 all:
-	$(CXX) $(CXXFLAGS) $(SRC) -o $(OUT) $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $(SRC) -o $(OUT) $(LDFLAGS) 
 
 clean:
 	rm -f $(OUT)

@@ -11,4 +11,4 @@ constexpr float ARENA_RADIUS = DISPLAY_WIDTH * 0.44f;
 
 // Ball settings
 constexpr float BALL_RADIUS = 18.0f;
-constexpr int NUM_BALLS = 8;
+constexpr int NUM_BALLS = 4;

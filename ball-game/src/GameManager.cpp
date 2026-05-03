@@ -39,6 +39,23 @@ void GameManager::generateRandomPosition(Vec2& position) {
                  std::to_string(position.x) + ", " + std::to_string(position.y) + ")");
 }
 
+Line GameManager::createLine(const Vec2& ballPosition, XColor color) {
+    Vec2 direction(ballPosition.x - m_arenaCenter.x, ballPosition.y - m_arenaCenter.y);
+    float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+
+    Vec2 closestPoint;
+    if (distance > 0.0f) {
+        float scale = m_arenaRadius / distance;
+        closestPoint.x = m_arenaCenter.x + direction.x * scale;
+        closestPoint.y = m_arenaCenter.y + direction.y * scale;
+    } else {
+        closestPoint.x = m_arenaCenter.x + m_arenaRadius;
+        closestPoint.y = m_arenaCenter.y;
+    }
+
+    return Line(ballPosition, closestPoint, color);
+}
+
 void GameManager::createBall() {
     Vec2 initPosition;
     generateRandomPosition(initPosition);
@@ -48,7 +65,12 @@ void GameManager::createBall() {
     generateRandomVelocity(initialVelocity);
 
     int ballIndex = m_balls.size() % 10; // Para asignar colores cíclicamente
-    Ball newBall(Colours::setBallColor(ballIndex), ballRadius, initPosition);
+    XColor ballColor = Colours::setBallColor(ballIndex);
+    Ball newBall(ballColor, ballRadius, initPosition);
+
+    Line initLine = createLine(initPosition, ballColor);
+    newBall.addLine(initLine);
+
     newBall.setVelocity(initialVelocity);
     m_balls.push_back(newBall);
     
@@ -135,6 +157,14 @@ void GameManager::updateGame() {
         for (size_t j = i + 1; j < m_balls.size(); ++j) {
             detectBallCollisions(m_balls[i], m_balls[j]);
             detectCrossingLine(m_balls[i],m_balls[j]);
+        }
+    }
+
+    for (std::size_t i = 0; i < m_balls.size(); ++i) {
+        if (m_balls[i].getLines().empty()) {
+            m_balls.erase(m_balls.begin() + i);
+            Logger::info(FILE_NAME, "GameManager::updateGame", "Removed ball with id " + std::to_string(m_balls[i].getId()) + " because it has no lines left");
+            --i; // Ajustar índice después de eliminar
         }
     }
 }

@@ -35,6 +35,13 @@ public:
     void updateBalls(); 
     void eraseBall(const Ball& ball);
 
+    void showMessage(const std::string& message);
+
+    void setFontSize(int size);
+    void setFont(const std::string& fontName);
+
+    void setScreenColor(XColor color);
+
 private:
     Display*    m_display;
     Window      m_window;

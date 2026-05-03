@@ -58,6 +58,9 @@ bool Renderer::init(const std::string& title) {
     m_backBuffer = XCreatePixmap(m_display, m_window, WIDTH, HEIGHT,
                                  DefaultDepth(m_display, screen));
 
+    // Set a beautiful font and large size
+    setFont("-*-lucida-bright-*-r-*-*-500-*-*-*-*-*-iso8859-1");
+
     XFlush(m_display);
     Logger::info(FILE_NAME, "Renderer::init", "Renderer initialized successfully - Window size: " + 
                 std::to_string(WIDTH) + "x" + std::to_string(HEIGHT));
@@ -177,4 +180,62 @@ bool Renderer::pollEvents() {
         }
     }
     return true;
+}
+
+void Renderer::showMessage(const std::string& message) {
+    Logger::debug(FILE_NAME, "Renderer::showMessage", "Displaying message: " + message);
+    XSetForeground(m_display, m_gc, Colours::whiteColor.pixel);
+    
+    // Handle multiline messages by parsing newlines
+    int lineHeight = 30;
+    int startY = HEIGHT / 2 - 30;
+    int lineNum = 0;
+    size_t pos = 0;
+    
+    while (pos < message.length()) {
+        size_t newlinePos = message.find('\n', pos);
+        if (newlinePos == std::string::npos) {
+            newlinePos = message.length();
+        }
+        
+        std::string line = message.substr(pos, newlinePos - pos);
+        int y = startY + (lineNum * lineHeight);
+        
+        // Center the text horizontally
+        int textWidth = line.length() * 8; // Approximate character width
+        int x = (WIDTH - textWidth) / 2;
+        
+        XDrawString(m_display, m_backBuffer, m_gc, x, y, line.c_str(), line.length());
+        
+        lineNum++;
+        pos = newlinePos + 1;
+    }
+    
+    present();
+}
+
+void Renderer::setFontSize(int size) {
+    XFontStruct* font = XLoadQueryFont(m_display, ("-*-helvetica-bold-r-normal--" + std::to_string(size) + "-*" + "-*-*-*-*-iso8859-1").c_str());
+    if (!font) {
+        Logger::warning(FILE_NAME, "Renderer::setFontSize", "Failed to load font. Falling back to default.");
+        return;
+    }
+    XSetFont(m_display, m_gc, font->fid);
+}
+
+void Renderer::setFont(const std::string& fontName) {
+    XFontStruct* font = XLoadQueryFont(m_display, fontName.c_str());
+    if (!font) {
+        Logger::warning(FILE_NAME, "Renderer::setFont", "Failed to load font: " + fontName);
+        return;
+    }
+    XSetFont(m_display, m_gc, font->fid);
+}
+
+void Renderer::setScreenColor(XColor color) {
+    // Create a semi-transparent overlay
+    XSetForeground(m_display, m_gc, color.pixel);
+    XFillRectangle(m_display, m_backBuffer, m_gc, 0, 0, WIDTH, HEIGHT);
+    XCopyArea(m_display, m_backBuffer, m_window, m_gc, 0, 0, WIDTH, HEIGHT, 0, 0);
+    XFlush(m_display);
 }

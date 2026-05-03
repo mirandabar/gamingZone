@@ -64,3 +64,17 @@ XColor Colours::brownColor;
 XColor Colours::yellowColor;
 XColor Colours::cyanColor;
 XColor Colours::grayColor;
+
+std::string Colours::getColorName(const XColor& color) {
+    if (color.pixel == redColor.pixel) return "ROJA";
+    if (color.pixel == blueColor.pixel) return "AZUL";
+    if (color.pixel == orangeColor.pixel) return "NARANJA";
+    if (color.pixel == purpleColor.pixel) return "PURPURA";
+    if (color.pixel == pinkColor.pixel) return "ROSA";
+    if (color.pixel == greenColor.pixel) return "VERDE";
+    if (color.pixel == brownColor.pixel) return "MARRON";
+    if (color.pixel == yellowColor.pixel) return "AMARILLA";
+    if (color.pixel == cyanColor.pixel) return "CIAN";
+    if (color.pixel == grayColor.pixel) return "GRIS";
+    return "DESCONOCIDA";
+}

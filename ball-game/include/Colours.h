@@ -28,4 +28,5 @@ public:
     // Initializes colors using the renderer's colormap
     static void initialize(Renderer& renderer);
     static XColor setBallColor(int number);
+    static std::string getColorName(const XColor& color);
 };
