@@ -7,19 +7,36 @@ bool CollisionManager::checkCollision(const Ball& ball1, const Ball& ball2) cons
 }
 
 void CollisionManager::resolveCollision(Ball& ball1, Ball& ball2) const {
-    Vec2 normal = (ball2.getPosition() - ball1.getPosition()).normalize();
-    Vec2 relativeVelocity = ball1.getVelocity() - ball2.getVelocity();
+    Vec2 deltaPosition = ball2.getPosition() - ball1.getPosition();
+    float distance = deltaPosition.length();
+    float r = ball1.getRadius() + ball2.getRadius();
 
-    float velocityAlongNormal = relativeVelocity.dot(normal);
-    if (velocityAlongNormal > 0) return;
+    if (distance > r) {
+        return;
+    }
 
-    float restitution = 1.0f; // Perfectly elastic collision
-    float impulse = -(1 + restitution) * velocityAlongNormal;
-    impulse /= 1 / ball1.getRadius() + 1 / ball2.getRadius();
+    Vec2 normal = deltaPosition.normalize();
+    Vec2 t = {-normal.y, normal.x}; // Tangential vector
 
-    Vec2 impulseVector = normal * impulse;
-    ball1.setVelocity(ball1.getVelocity() - impulseVector / ball1.getRadius());
-    ball2.setVelocity(ball2.getVelocity() + impulseVector / ball2.getRadius());
+    float v1n = ball1.getVelocity().dot(normal);
+    float v1t = ball1.getVelocity().dot(t);
+    float v2n = ball2.getVelocity().dot(normal);
+    float v2t = ball2.getVelocity().dot(t);
+
+    // Interchange normal velocities (elastic collision)
+    Vec2 v1 = t * v1t + normal * v2n;
+    Vec2 v2 = t * v2t + normal * v1n;
+
+    // Update velocities of the balls
+    ball1.setVelocity(v1);
+    ball2.setVelocity(v2);
+
+    // Correct positions to prevent sticking
+    float overlap = r - distance;
+    Vec2 correction = normal * (overlap / 2.0f);
+
+    ball1.setPosition(ball1.getPosition() - correction);
+    ball2.setPosition(ball2.getPosition() + correction);
 }
 
 bool CollisionManager::checkBoundaryCollision(const Ball& ball, const Vec2& arenaCenter, float arenaRadius) const {

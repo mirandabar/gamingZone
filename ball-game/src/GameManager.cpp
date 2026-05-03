@@ -7,16 +7,39 @@ GameManager::GameManager(Renderer& renderer)
     m_arenaCenter(ARENA_CENTER_X, ARENA_CENTER_Y),
     m_arenaRadius(ARENA_RADIUS) {}
 
+void GameManager::initRandom() {
+    srand(static_cast<unsigned int>(time(nullptr)));
+}
+
+void GameManager::generateRandomVelocity(Vec2& velocity) {
+    // Genera una velocidad aleatoria entre -5 y 5 para x e y
+    velocity.x = (static_cast<float>(rand()) / RAND_MAX) * 10.0f - 5.0f;
+    velocity.y = (static_cast<float>(rand()) / RAND_MAX) * 10.0f - 5.0f;
+}
+
+void GameManager::generateRandomPosition(Vec2& position) {
+    // Genera una posición aleatoria dentro del área de juego
+    float angle = static_cast<float>(rand()) / RAND_MAX * 2.0f * M_PI;
+    float radius = static_cast<float>(rand()) / RAND_MAX * (m_arenaRadius - BALL_RADIUS);
+    position.x = m_arenaCenter.x + radius * cos(angle);
+    position.y = m_arenaCenter.y + radius * sin(angle);
+}
+
 void GameManager::initializeGame() {
     // Initialize colors
     Colours::initialize(m_renderer);
 
-    // Create balls
-    Vec2 initPositionRed = { m_arenaCenter.x - m_arenaRadius * 0.5f, m_arenaCenter.y };
-    Vec2 initPositionBlue = { m_arenaCenter.x + m_arenaRadius * 0.5f, m_arenaCenter.y };
+    // Initialize random seed
+    initRandom();
+
+    Vec2 initPositionRed, initPositionBlue;
+    generateRandomPosition(initPositionRed);
+    generateRandomPosition(initPositionBlue);
 
     float ballRadius = BALL_RADIUS;
-    Vec2 initialVelocity = { INITIAL_VELOCITY_X, INITIAL_VELOCITY_Y };
+    Vec2 initialVelocity;
+
+    generateRandomVelocity(initialVelocity);
 
     Ball redBall(Colours::redColor, ballRadius, initPositionRed);
     Ball blueBall(Colours::blueColor, ballRadius, initPositionBlue);
@@ -38,13 +61,13 @@ void GameManager::updateGame() {
         }
     }
 
-    //for (size_t i = 0; i < m_balls.size(); ++i) {
-    //    for (size_t j = i + 1; j < m_balls.size(); ++j) {
-    //        if (m_collisionManager.checkCollision(m_balls[i], m_balls[j])) {
-    //            m_collisionManager.resolveCollision(m_balls[i], m_balls[j]);
-    //        }
-    //    }
-    //}
+    for (size_t i = 0; i < m_balls.size(); ++i) {
+        for (size_t j = i + 1; j < m_balls.size(); ++j) {
+            if (m_collisionManager.checkCollision(m_balls[i], m_balls[j])) {
+                m_collisionManager.resolveCollision(m_balls[i], m_balls[j]);
+            }
+        }
+    }
 }
 
 void GameManager::renderGame() {

@@ -11,5 +11,3 @@ constexpr float ARENA_RADIUS = DISPLAY_WIDTH * 0.44f; // ~198px de margen latera
 
 // Ball settings
 constexpr float BALL_RADIUS = 18.0f;
-constexpr float INITIAL_VELOCITY_X = -1.0f;
-constexpr float INITIAL_VELOCITY_Y = 1.0f;

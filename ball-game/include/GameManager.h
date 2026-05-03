@@ -20,4 +20,8 @@ private:
 
     Vec2 m_arenaCenter;
     float m_arenaRadius;
+
+    void initRandom();
+    void generateRandomVelocity(Vec2& velocity);
+    void generateRandomPosition(Vec2& position);
 };
