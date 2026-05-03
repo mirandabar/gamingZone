@@ -29,4 +29,6 @@ private:
     void detectBallCollisions(Ball& ball1, Ball& ball2);
     void detectCrossingLine(Ball& ball1, Ball& ball2);
     void eraseLines(Ball& ball, Ball& ballLinesToDelete);
+
+    void createBall();
 };

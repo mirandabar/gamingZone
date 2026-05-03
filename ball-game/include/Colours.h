@@ -16,7 +16,16 @@ public:
     static XColor blueColor;
     static XColor whiteColor;
     static XColor blackColor;
+    static XColor orangeColor;
+    static XColor purpleColor;
+    static XColor pinkColor;
+    static XColor greenColor;
+    static XColor brownColor;
+    static XColor yellowColor;
+    static XColor cyanColor;
+    static XColor grayColor;
 
     // Initializes colors using the renderer's colormap
     static void initialize(Renderer& renderer);
+    static XColor setBallColor(int number);
 };

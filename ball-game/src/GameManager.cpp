@@ -39,6 +39,24 @@ void GameManager::generateRandomPosition(Vec2& position) {
                  std::to_string(position.x) + ", " + std::to_string(position.y) + ")");
 }
 
+void GameManager::createBall() {
+    Vec2 initPosition;
+    generateRandomPosition(initPosition);
+
+    float ballRadius = BALL_RADIUS;
+    Vec2 initialVelocity;
+    generateRandomVelocity(initialVelocity);
+
+    int ballIndex = m_balls.size() % 10; // Para asignar colores cíclicamente
+    Ball newBall(Colours::setBallColor(ballIndex), ballRadius, initPosition);
+    newBall.setVelocity(initialVelocity);
+    m_balls.push_back(newBall);
+    
+    Logger::info(FILE_NAME, "GameManager::createBall", "Created new ball with id: " + std::to_string(newBall.getId()) + 
+                " at position (" + std::to_string(initPosition.x) + ", " + std::to_string(initPosition.y) + 
+                ") with velocity (" + std::to_string(initialVelocity.x) + ", " + std::to_string(initialVelocity.y) + ")");
+}
+
 void GameManager::initializeGame() {
     Logger::info(FILE_NAME, "GameManager::initializeGame", "Initializing game...");
     
@@ -48,28 +66,13 @@ void GameManager::initializeGame() {
     // Initialize random seed
     initRandom();
 
-    Vec2 initPositionRed, initPositionBlue;
-    generateRandomPosition(initPositionRed);
-    generateRandomPosition(initPositionBlue);
-
-    float ballRadius = BALL_RADIUS;
-    Vec2 initialVelocity;
-
-    generateRandomVelocity(initialVelocity);
-
-    Ball redBall(Colours::redColor, ballRadius, initPositionRed);
-    Ball blueBall(Colours::blueColor, ballRadius, initPositionBlue);
-
-    redBall.setVelocity(initialVelocity);
-    blueBall.setVelocity(initialVelocity * -1.0f);
-
-    m_balls.push_back(redBall);
-    m_balls.push_back(blueBall);
+    for ( int i = 0; i < NUM_BALLS; ++i ) {
+        Logger::debug(FILE_NAME, "GameManager::initializeGame", "Preparing to create ball with index " + std::to_string(i));
+        createBall();
+    }
     
     Logger::info(FILE_NAME, "GameManager::initializeGame", "Game initialized successfully with " + 
                 std::to_string(m_balls.size()) + " balls");
-
-    renderGame();
 }
 
 void GameManager::detectArenaCollisions(Ball& ball) {

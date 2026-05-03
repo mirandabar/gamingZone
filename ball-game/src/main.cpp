@@ -22,6 +22,7 @@ int main() {
         
         Logger::info(FILE_NAME, "main", "Initializing Game");
         gameManager.initializeGame();
+        gameManager.renderGame(); // Render initial state
 
         // Sleep 1 seconds to show initial state
         Logger::debug(FILE_NAME, "main", "Sleeping for 1 second to show initial state");

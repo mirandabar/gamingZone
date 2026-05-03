@@ -22,10 +22,45 @@ void Colours::initialize(Renderer& renderer) {
     blueColor.pixel = renderer.allocColor(50, 100, 220);
     whiteColor.pixel = renderer.allocColor(255, 255, 255);
     blackColor.pixel = renderer.allocColor(0, 0, 0);
+    orangeColor.pixel = renderer.allocColor(255, 165, 0);
+    purpleColor.pixel = renderer.allocColor(128, 0, 128);
+    pinkColor.pixel = renderer.allocColor(255, 192, 203);
+    greenColor.pixel = renderer.allocColor(0, 255, 0);
+    brownColor.pixel = renderer.allocColor(165, 42, 42);
+    yellowColor.pixel = renderer.allocColor(255, 255, 0);
+    cyanColor.pixel = renderer.allocColor(0, 255, 255);
+    grayColor.pixel = renderer.allocColor(128, 128, 128);
     Logger::info(FILE_NAME, "Colours::initialize", "Colors initialized successfully");
+}
+
+XColor Colours::setBallColor(int number) {
+    switch (number) {
+        case 0: return redColor;
+        case 1: return blueColor;
+        case 2: return orangeColor;
+        case 3: return purpleColor;
+        case 4: return pinkColor;
+        case 5: return greenColor;
+        case 6: return brownColor;
+        case 7: return yellowColor;
+        case 8: return cyanColor;
+        case 9: return grayColor;
+        default:
+            Logger::warning(FILE_NAME, "Colours::setBallColor", "Invalid color number " + std::to_string(number) + 
+                            " - returning white as default");
+            return redColor; // Default
+    }
 }
 
 XColor Colours::redColor;
 XColor Colours::blueColor;
 XColor Colours::whiteColor;
 XColor Colours::blackColor;
+XColor Colours::orangeColor;
+XColor Colours::purpleColor;
+XColor Colours::pinkColor;
+XColor Colours::greenColor;
+XColor Colours::brownColor;
+XColor Colours::yellowColor;
+XColor Colours::cyanColor;
+XColor Colours::grayColor;
