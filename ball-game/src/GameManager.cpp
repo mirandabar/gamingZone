@@ -90,7 +90,7 @@ void GameManager::detectArenaCollisions(Ball& ball) {
         Line lineConection = Line(ball.getPosition(), pointColision, ball.getColor());
         ball.addLine(lineConection);
         m_renderer.drawLine(lineConection.getStart(), lineConection.getEnd(), lineConection.getColor());
-        m_collisionManager.resolveBoundaryCollision(ball, m_arenaCenter);
+        m_collisionManager.resolveBoundaryCollision(ball, m_arenaCenter, m_arenaRadius);
     }
 }
 

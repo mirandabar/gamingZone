@@ -70,11 +70,19 @@ Vec2 CollisionManager::checkBoundaryCollision(const Ball& ball, const Vec2& aren
     return Vec2(0, 0);
 }
 
-void CollisionManager::resolveBoundaryCollision(Ball& ball, const Vec2& arenaCenter) const {
+void CollisionManager::resolveBoundaryCollision(Ball& ball, const Vec2& arenaCenter, float arenaRadius) const {
     Logger::debug(FILE_NAME, "CollisionManager::resolveBoundaryCollision", "Resolving boundary collision for ball " + 
                  std::to_string(ball.getId()));
     Vec2 normal = (ball.getPosition() - arenaCenter).normalize();
+    
     ball.setVelocity(ball.getVelocity().reflect(normal));
+
+    float overlap = (ball.getPosition() - arenaCenter).length() + ball.getRadius() - arenaRadius;
+
+    if (overlap > 0) {
+        ball.setPosition(ball.getPosition() - normal * overlap);
+    }
+
     Logger::info(FILE_NAME, "CollisionManager::resolveBoundaryCollision", "Boundary collision resolved - ball " + 
                 std::to_string(ball.getId()) + " velocity reflected");
 }

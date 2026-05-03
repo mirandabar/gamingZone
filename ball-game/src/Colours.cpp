@@ -46,9 +46,9 @@ XColor Colours::setBallColor(int number) {
         case 8: return cyanColor;
         case 9: return grayColor;
         default:
-            Logger::warning(FILE_NAME, "Colours::setBallColor", "Invalid color number " + std::to_string(number) + 
-                            " - returning white as default");
-            return redColor; // Default
+            Logger::warning(FILE_NAME, "Colours::setBallColor", "Creating a random color");
+            //return Colours::fillStruct(rand() % 256, rand() % 256, rand() % 256);
+            return whiteColor; // fallback
     }
 }
 
