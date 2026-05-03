@@ -19,6 +19,12 @@ private:
 public:
     Ball(XColor color, float radius, Vec2 position);
     ~Ball();
+    
+    // Rule of Five
+    Ball(const Ball&) = default;
+    Ball& operator=(const Ball&) = default;
+    Ball(Ball&&) = default;
+    Ball& operator=(Ball&&) = default;
 
     // Getters
     XColor getColor() const;
