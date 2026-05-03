@@ -91,7 +91,18 @@ void Ball::addLine(const Line& line) {
     lines.push_back(line);
 }
 
-const std::vector<Line>& Ball::getLines() const {
+void Ball::eraseLine(int lineId) {
+    for (std::size_t i = 0; i < lines.size(); ++i) {
+        if (lines[i].getId() == lineId) {
+            Logger::info(FILE_NAME, "Ball::eraseLine", "Erasing line with id " + std::to_string(lineId) + 
+                         " from ball " + std::to_string(id));
+            lines.erase(lines.begin() + i);
+            return;
+        }
+    }
+}
+
+std::vector<Line>& Ball::getLines() {
     return lines;
 }
 

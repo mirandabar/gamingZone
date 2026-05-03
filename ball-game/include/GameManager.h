@@ -24,4 +24,9 @@ private:
     void initRandom();
     void generateRandomVelocity(Vec2& velocity);
     void generateRandomPosition(Vec2& position);
+
+    void detectArenaCollisions(Ball& ball);
+    void detectBallCollisions(Ball& ball1, Ball& ball2);
+    void detectCrossingLine(Ball& ball1, Ball& ball2);
+    void eraseLines(Ball& ball, Ball& ballLinesToDelete);
 };

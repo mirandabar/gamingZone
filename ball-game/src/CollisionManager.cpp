@@ -78,3 +78,36 @@ void CollisionManager::resolveBoundaryCollision(Ball& ball, const Vec2& arenaCen
     Logger::info(FILE_NAME, "CollisionManager::resolveBoundaryCollision", "Boundary collision resolved - ball " + 
                 std::to_string(ball.getId()) + " velocity reflected");
 }
+
+bool CollisionManager::checkBallLineCollision(const Ball& ball, const Line& line) const {
+    Logger::debug(FILE_NAME, "CollisionManager::checkBallLineCollision", "Checking collision between ball " + 
+                 std::to_string(ball.getId()) + " and line from (" + std::to_string(line.getStart().x) + 
+                 ", " + std::to_string(line.getStart().y) + ") to (" + std::to_string(line.getEnd().x) + 
+                 ", " + std::to_string(line.getEnd().y) + ")");
+
+    Vec2 start = line.getStart();
+    Vec2 end = line.getEnd();
+    Vec2 segment = end - start;
+    Vec2 ballCenter = ball.getPosition();
+
+    float segmentLengthSquared = segment.x * segment.x + segment.y * segment.y;
+    float t = 0.0f;
+
+    if (segmentLengthSquared > 0.0f) {
+        Vec2 toBall = ballCenter - start;
+        t = toBall.dot(segment) / segmentLengthSquared;
+        if (t < 0.0f) t = 0.0f;
+        if (t > 1.0f) t = 1.0f;
+    }
+
+    Vec2 closestPoint = start + segment * t;
+    float distance = (ballCenter - closestPoint).length();
+    bool collided = distance <= ball.getRadius();
+
+    if (collided) {
+        Logger::info(FILE_NAME, "CollisionManager::checkBallLineCollision", "Collision detected between ball " +
+                     std::to_string(ball.getId()) + " and line at distance: " + std::to_string(distance));
+    }
+
+    return collided;
+}

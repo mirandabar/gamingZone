@@ -9,4 +9,5 @@ public:
     void resolveCollision(Ball& ball1, Ball& ball2) const;
     Vec2 checkBoundaryCollision(const Ball& ball, const Vec2& arenaCenter, float arenaRadius, bool &collision) const;
     void resolveBoundaryCollision(Ball& ball, const Vec2& arenaCenter) const;
+    bool checkBallLineCollision(const Ball& ball, const Line& line) const;
 };

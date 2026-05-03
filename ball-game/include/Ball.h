@@ -35,7 +35,8 @@ public:
     void move();
 
     void addLine(const Line& line); 
-    const std::vector<Line>& getLines() const; 
+    void eraseLine(int lineId);
+    std::vector<Line>& getLines(); 
     void updateLines();
 };
 

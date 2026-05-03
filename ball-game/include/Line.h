@@ -9,6 +9,8 @@ private:
     Vec2 start;
     Vec2 end;
     XColor color;
+    int id;
+    static int nextId;
 
 public:
     Line(Vec2 start, Vec2 end, XColor color);
@@ -17,6 +19,7 @@ public:
     Vec2 getStart() const;
     Vec2 getEnd() const;
     XColor getColor() const;
+    int getId() const;
 
     // Setters
     void setStart(Vec2 start);
