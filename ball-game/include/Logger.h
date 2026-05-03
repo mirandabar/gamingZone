@@ -5,6 +5,7 @@
 #include <sstream>
 #include <chrono>
 #include <iomanip>
+#include <unistd.h>
 
 enum class LogLevel {
     DEBUG,

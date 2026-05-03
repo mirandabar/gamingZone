@@ -14,6 +14,12 @@ public:
 
     Renderer();
     ~Renderer();
+    
+    // Rule of Five - forbid copying system resources, but allow move
+    Renderer(const Renderer&) = delete;
+    Renderer& operator=(const Renderer&) = delete;
+    Renderer(Renderer&&) = default;
+    Renderer& operator=(Renderer&&) = default;
 
     bool init(const std::string& title);
     void clear();                                         

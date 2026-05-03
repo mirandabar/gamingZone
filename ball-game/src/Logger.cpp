@@ -3,13 +3,15 @@
 #include <sys/stat.h>
 
 // Static member initialization
-std::string Logger::m_logFilePath = "log/ball_game.log";
+std::string Logger::m_logFilePath = "";
 bool Logger::m_initialized = false;
 
 void Logger::initialize(const std::string& logDir) {
     // Create log directory if it doesn't exist
     mkdir(logDir.c_str(), 0755);
-    m_logFilePath = logDir + "/ball_game.log";
+    // Include PID in log filename
+    pid_t pid = getpid();
+    m_logFilePath = logDir + "/ball_game_" + std::to_string(pid) + ".log";
     m_initialized = true;
 }
 
