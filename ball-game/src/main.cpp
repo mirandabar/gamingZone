@@ -1,6 +1,7 @@
 #include "../include/Renderer.h"
 #include "../include/GameManager.h"
 #include "../include/Logger.h"
+#include "../include/Audio.h"
 #include <chrono>
 #include <thread>
 #include <vector>
@@ -36,6 +37,9 @@ int main() {
             // ~60 FPS
             std::this_thread::sleep_for(std::chrono::milliseconds(16));
         }
+
+        Audio::playSound("/root/gitRepos/gamingZone/ball-game/audio/winnerSound.wav");
+        Audio::shutdown();
         
         Logger::info(FILE_NAME, "main", "========== GAME ENDED NORMALLY ==========");
         return 0;
