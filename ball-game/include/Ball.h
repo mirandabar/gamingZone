@@ -9,6 +9,10 @@ private:
     XColor color;
     float radius;
     Vec2 position;
+    Vec2 velocity;
+    int id; 
+    static int nextId;
+
 public:
     Ball(XColor color, float radius, Vec2 position);
     ~Ball();
@@ -17,10 +21,14 @@ public:
     XColor getColor() const;
     float getRadius() const;
     Vec2 getPosition() const;
+    Vec2 getVelocity() const;
+    int getId() const;
 
     // Setters
     void setColor(XColor color);
     void setRadius(float radius); 
     void setPosition(Vec2 position);
+    void setVelocity(Vec2 velocity);
+    void move();
 };
 

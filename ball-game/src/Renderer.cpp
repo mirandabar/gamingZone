@@ -4,6 +4,8 @@
 #include <X11/Xutil.h>
 #include <stdexcept>
 #include <cmath>
+#include <vector>
+#include <iostream>
 
 Renderer::Renderer()
     : m_display(nullptr), m_window(0), m_gc(0), m_backBuffer(0) {}
@@ -99,7 +101,6 @@ void Renderer::drawCircle(Vec2 center, float radius, XColor color) {
 
 void Renderer::drawFilledCircle(Vec2 center, float radius, XColor color) {
     XSetForeground(m_display, m_gc, color.pixel);
-    // Llenamos usando XFillArc: ángulo en 64avos de grado (360*64)
     int x = (int)(center.x - radius);
     int y = (int)(center.y - radius);
     int d = (int)(radius * 2);
@@ -108,10 +109,25 @@ void Renderer::drawFilledCircle(Vec2 center, float radius, XColor color) {
 
 void Renderer::drawBall(const Ball& ball) {
     drawFilledCircle(ball.getPosition(), ball.getRadius(), ball.getColor());
+    ballsMap.emplace(ball.getId(), ball);
+}
+
+void Renderer::eraseBall(const Ball& ball) {
+    if (ballsMap.find(ball.getId()) != ballsMap.end()) {
+        drawFilledCircle(ball.getPosition(), ball.getRadius(), Colours::blackColor);
+    }
+}
+
+void Renderer::updateBalls() {
+    for (auto& [id, ball] : ballsMap) {
+        eraseBall(ball); // Borrar la bola antes de moverla
+        ball.move();
+        drawBall(ball);
+    }
 }
 
 void Renderer::present() {
-    // Copia el back buffer a la ventana real → sin parpadeo
+    //clear(); // Limpiar el fondo antes de copiar el back buffer
     XCopyArea(m_display, m_backBuffer, m_window, m_gc, 0, 0, WIDTH, HEIGHT, 0, 0);
     XFlush(m_display);
 }

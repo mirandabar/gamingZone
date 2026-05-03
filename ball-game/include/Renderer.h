@@ -3,6 +3,8 @@
 #include <string>
 #include "Ball.h"
 #include "Vec2.h"
+#include <vector>
+#include <unordered_map>
 
 class Renderer {
 public:
@@ -14,20 +16,24 @@ public:
     ~Renderer();
 
     bool init(const std::string& title);
-    void clear();                                          // borra el frame
-    void drawCircle(Vec2 center, float radius, XColor color);  // círculo hueco
-    void drawFilledCircle(Vec2 center, float radius, XColor color);
+    void clear();                                         
+    void drawCircle(Vec2 center, float radius, XColor color);  
+    void drawFilledCircle(Vec2 center, float radius, XColor color); 
     void drawBall(const Ball& ball);                       
-    void present();                                        // muestra el frame
-    bool pollEvents();                                     // false = cerrar
+    void present();                                        
+    bool pollEvents();                                     
 
     unsigned long allocColor(int r, int g, int b);
+
+    void updateBalls(); 
+    void eraseBall(const Ball& ball);
 
 private:
     Display*    m_display;
     Window      m_window;
     GC          m_gc;          // Graphics Context
     Pixmap      m_backBuffer;  // doble buffer para evitar parpadeo
+    std::unordered_map<int, Ball> ballsMap; // Mapa de bolas por ID
 
     void          drawCirclePoints(int cx, int cy, int x, int y); // Bresenham
 };
