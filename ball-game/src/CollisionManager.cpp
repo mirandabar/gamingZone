@@ -1,17 +1,30 @@
 #include "../include/CollisionManager.h"
+#include "../include/Logger.h"
 #include <cmath>
+
+static const std::string FILE_NAME = "CollisionManager.cpp";
 
 bool CollisionManager::checkCollision(const Ball& ball1, const Ball& ball2) const {
     float distance = (ball1.getPosition() - ball2.getPosition()).length();
-    return distance < (ball1.getRadius() + ball2.getRadius());
+    bool collided = distance < (ball1.getRadius() + ball2.getRadius());
+    if (collided) {
+        Logger::debug(FILE_NAME, "CollisionManager::checkCollision", "Collision detected between ball " + 
+                     std::to_string(ball1.getId()) + " and ball " + std::to_string(ball2.getId()) + 
+                     " at distance: " + std::to_string(distance));
+    }
+    return collided;
 }
 
 void CollisionManager::resolveCollision(Ball& ball1, Ball& ball2) const {
+    Logger::debug(FILE_NAME, "CollisionManager::resolveCollision", "Resolving collision between ball " + 
+                 std::to_string(ball1.getId()) + " and ball " + std::to_string(ball2.getId()));
+    
     Vec2 deltaPosition = ball2.getPosition() - ball1.getPosition();
     float distance = deltaPosition.length();
     float r = ball1.getRadius() + ball2.getRadius();
 
     if (distance > r) {
+        Logger::debug(FILE_NAME, "CollisionManager::resolveCollision", "Distance > r, no collision to resolve");
         return;
     }
 
@@ -37,6 +50,8 @@ void CollisionManager::resolveCollision(Ball& ball1, Ball& ball2) const {
 
     ball1.setPosition(ball1.getPosition() - correction);
     ball2.setPosition(ball2.getPosition() + correction);
+    
+    Logger::info(FILE_NAME, "CollisionManager::resolveCollision", "Collision resolved - velocities exchanged");
 }
 
 Vec2 CollisionManager::checkBoundaryCollision(const Ball& ball, const Vec2& arenaCenter, float arenaRadius, bool &collision) const {
@@ -46,6 +61,8 @@ Vec2 CollisionManager::checkBoundaryCollision(const Ball& ball, const Vec2& aren
         collision = true;
         Vec2 normal = (ball.getPosition() - arenaCenter).normalize();
         Vec2 contactPoint = arenaCenter + normal * arenaRadius;
+        Logger::debug(FILE_NAME, "CollisionManager::checkBoundaryCollision", "Boundary collision detected for ball " + 
+                     std::to_string(ball.getId()));
         return contactPoint;
     }
 
@@ -54,6 +71,10 @@ Vec2 CollisionManager::checkBoundaryCollision(const Ball& ball, const Vec2& aren
 }
 
 void CollisionManager::resolveBoundaryCollision(Ball& ball, const Vec2& arenaCenter) const {
+    Logger::debug(FILE_NAME, "CollisionManager::resolveBoundaryCollision", "Resolving boundary collision for ball " + 
+                 std::to_string(ball.getId()));
     Vec2 normal = (ball.getPosition() - arenaCenter).normalize();
     ball.setVelocity(ball.getVelocity().reflect(normal));
+    Logger::info(FILE_NAME, "CollisionManager::resolveBoundaryCollision", "Boundary collision resolved - ball " + 
+                std::to_string(ball.getId()) + " velocity reflected");
 }

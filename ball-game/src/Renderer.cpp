@@ -1,5 +1,6 @@
 #include "../include/Renderer.h"
 #include "../include/Colours.h"
+#include "../include/Logger.h"
 
 #include <X11/Xutil.h>
 #include <stdexcept>
@@ -7,21 +8,32 @@
 #include <vector>
 #include <iostream>
 
+static const std::string FILE_NAME = "Renderer.cpp";
+
 Renderer::Renderer()
-    : m_display(nullptr), m_window(0), m_gc(0), m_backBuffer(0) {}
+    : m_display(nullptr), m_window(0), m_gc(0), m_backBuffer(0) {
+    Logger::debug(FILE_NAME, "Renderer::Renderer", "Renderer constructor - initializing");
+}
 
 Renderer::~Renderer() {
+    Logger::debug(FILE_NAME, "Renderer::~Renderer", "Renderer destructor - cleaning up resources");
     if (m_display) {
         if (m_backBuffer) XFreePixmap(m_display, m_backBuffer);
         if (m_gc)         XFreeGC(m_display, m_gc);
         XDestroyWindow(m_display, m_window);
         XCloseDisplay(m_display);
+        Logger::info(FILE_NAME, "Renderer::~Renderer", "Renderer resources cleaned up successfully");
     }
 }
 
 bool Renderer::init(const std::string& title) {
+    Logger::info(FILE_NAME, "Renderer::init", "Initializing Renderer with title: " + title);
+    
     m_display = XOpenDisplay(nullptr);
-    if (!m_display) return false;
+    if (!m_display) {
+        Logger::critical(FILE_NAME, "Renderer::init", "FAILED: Could not open X Display");
+        return false;
+    }
 
     int screen = DefaultScreen(m_display);
 
@@ -47,10 +59,14 @@ bool Renderer::init(const std::string& title) {
                                  DefaultDepth(m_display, screen));
 
     XFlush(m_display);
+    Logger::info(FILE_NAME, "Renderer::init", "Renderer initialized successfully - Window size: " + 
+                std::to_string(WIDTH) + "x" + std::to_string(HEIGHT));
     return true;
 }
 
 unsigned long Renderer::allocColor(int r, int g, int b) {
+    Logger::debug(FILE_NAME, "Renderer::allocColor", "Allocating color RGB(" + std::to_string(r) + ", " + 
+                 std::to_string(g) + ", " + std::to_string(b) + ")");
     XColor color;
     color.red   = r * 257; // X11 usa rango 0-65535
     color.green = g * 257;
@@ -115,6 +131,9 @@ void Renderer::drawFilledCircle(Vec2 center, float radius, XColor color) {
 }
 
 void Renderer::drawBall(const Ball& ball) {
+    Logger::debug(FILE_NAME, "Renderer::drawBall", "Drawing ball id=" + std::to_string(ball.getId()) + 
+                 " at position (" + std::to_string(ball.getPosition().x) + ", " + 
+                 std::to_string(ball.getPosition().y) + ")");
     drawFilledCircle(ball.getPosition(), ball.getRadius(), ball.getColor());
     ballsMap.emplace(ball.getId(), ball);
 }
@@ -144,9 +163,18 @@ bool Renderer::pollEvents() {
         XEvent e;
         XNextEvent(m_display, &e);
 
-        if (e.type == KeyPress)          return false; // cualquier tecla = salir
-        if (e.type == ClientMessage)     return false;
-        if (e.type == DestroyNotify)     return false;
+        if (e.type == KeyPress) {
+            Logger::info(FILE_NAME, "Renderer::pollEvents", "Key press detected - exiting application");
+            return false; // cualquier tecla = salir
+        }
+        if (e.type == ClientMessage) {
+            Logger::info(FILE_NAME, "Renderer::pollEvents", "Client message event - exiting application");
+            return false;
+        }
+        if (e.type == DestroyNotify) {
+            Logger::info(FILE_NAME, "Renderer::pollEvents", "Window destroy event - exiting application");
+            return false;
+        }
     }
     return true;
 }

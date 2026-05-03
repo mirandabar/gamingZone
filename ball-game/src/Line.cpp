@@ -1,7 +1,13 @@
 #include "../include/Line.h"
+#include "../include/Logger.h"
+
+static const std::string FILE_NAME = "Line.cpp";
 
 Line::Line(Vec2 start, Vec2 end, XColor color)
-    : start(start), end(end), color(color) {}
+    : start(start), end(end), color(color) {
+    Logger::debug(FILE_NAME, "Line::Line", "Creating line from (" + std::to_string(start.x) + ", " + 
+                 std::to_string(start.y) + ") to (" + std::to_string(end.x) + ", " + std::to_string(end.y) + ")");
+}
 
 // Getters
 Vec2 Line::getStart() const {
@@ -18,13 +24,18 @@ XColor Line::getColor() const {
 
 // Setters
 void Line::setStart(Vec2 start) {
+    Logger::debug(FILE_NAME, "Line::setStart", "Setting line start to (" + std::to_string(start.x) + ", " + 
+                 std::to_string(start.y) + ")");
     this->start = start;
 }   
 
 void Line::setEnd(Vec2 end) {
+    Logger::debug(FILE_NAME, "Line::setEnd", "Setting line end to (" + std::to_string(end.x) + ", " + 
+                 std::to_string(end.y) + ")");
     this->end = end;
 }
 
 void Line::setColor(XColor color) {
+    Logger::debug(FILE_NAME, "Line::setColor", "Setting line color");
     this->color = color;
 }
