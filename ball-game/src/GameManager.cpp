@@ -4,6 +4,7 @@
 #include "../include/Vec2.h"
 #include "../include/Line.h"
 #include "../include/Logger.h"
+#include "../include/Audio.h"
 
 static const std::string FILE_NAME = "GameManager.cpp";
 
@@ -85,6 +86,13 @@ void GameManager::initializeGame() {
     // Initialize colors
     Colours::initialize(m_renderer);
 
+    // Initialize audio
+    if (!Audio::initialize()) {
+        Logger::critical(FILE_NAME, "GameManager::initializeGame", "Failed to initialize audio system");
+    } else {
+        Logger::info(FILE_NAME, "GameManager::initializeGame", "Audio system initialized successfully");
+    }
+
     // Initialize random seed
     initRandom();
 
@@ -109,9 +117,13 @@ void GameManager::detectArenaCollisions(Ball& ball) {
 
     if (collision) {
         Logger::info(FILE_NAME, "GameManager::detectArenaCollisions", "Boundary collision detected for ball " + std::to_string(ball.getId()));
+        
+        Audio::playSound("/root/gitRepos/gamingZone/ball-game/audio/colissionSound.wav");
+        
         Line lineConection = Line(ball.getPosition(), pointColision, ball.getColor());
         ball.addLine(lineConection);
         m_renderer.drawLine(lineConection.getStart(), lineConection.getEnd(), lineConection.getColor());
+        
         m_collisionManager.resolveBoundaryCollision(ball, m_arenaCenter, m_arenaRadius);
     }
 }
@@ -121,6 +133,9 @@ void GameManager::detectBallCollisions(Ball& ball1, Ball& ball2) {
     if (m_collisionManager.checkCollision(ball1, ball2)) {
         Logger::info(FILE_NAME, "GameManager::detectBallCollisions", "Ball collision detected between ball " + 
                     std::to_string(ball1.getId()) + " and ball " + std::to_string(ball2.getId()));
+        
+        Audio::playSound("/root/gitRepos/gamingZone/ball-game/audio/colissionSound.wav");
+
         m_collisionManager.resolveCollision(ball1, ball2);
     }
 }
