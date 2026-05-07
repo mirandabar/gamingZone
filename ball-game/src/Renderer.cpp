@@ -5,6 +5,7 @@
 #include <X11/Xutil.h>
 #include <stdexcept>
 #include <cmath>
+#include <cstdlib>
 #include <vector>
 #include <iostream>
 
@@ -238,4 +239,55 @@ void Renderer::setScreenColor(XColor color) {
     XFillRectangle(m_display, m_backBuffer, m_gc, 0, 0, WIDTH, HEIGHT);
     XCopyArea(m_display, m_backBuffer, m_window, m_gc, 0, 0, WIDTH, HEIGHT, 0, 0);
     XFlush(m_display);
+}
+
+uint8_t* Renderer::captureFrame(int& outSize) {
+    Logger::debug(FILE_NAME, "Renderer::captureFrame", "Capturing frame from backbuffer");
+    
+    XImage* image = XGetImage(m_display, m_backBuffer, 0, 0, WIDTH, HEIGHT, AllPlanes, ZPixmap);
+    if (!image) {
+        Logger::error(FILE_NAME, "Renderer::captureFrame", "Failed to capture image from backbuffer");
+        outSize = 0;
+        return nullptr;
+    }
+
+    // Allocate buffer aligned to 32 bytes for SIMD optimization (FFmpeg requirement)
+    // Expected size: WIDTH * HEIGHT * 4 bytes (RGBA)
+    int stride = ((WIDTH * 4 + 31) / 32) * 32; // Align to 32 bytes
+    outSize = stride * HEIGHT;
+    
+    uint8_t* buffer = nullptr;
+    if (posix_memalign((void**)&buffer, 32, outSize) != 0) {
+        Logger::error(FILE_NAME, "Renderer::captureFrame", "Failed to allocate aligned memory");
+        XDestroyImage(image);
+        return nullptr;
+    }
+
+    // Copy pixel data from XImage to buffer
+    // XImage data layout depends on the server - we need to convert to RGB32
+    for (int y = 0; y < HEIGHT; y++) {
+        for (int x = 0; x < WIDTH; x++) {
+            unsigned long pixel = XGetPixel(image, x, y);
+            
+            // Extract RGB components (assuming 24-bit or 32-bit color)
+            uint8_t r = (pixel >> 16) & 0xFF;
+            uint8_t g = (pixel >> 8) & 0xFF;
+            uint8_t b = pixel & 0xFF;
+            
+            int idx = (y * stride) + (x * 4);
+            buffer[idx + 0] = r;
+            buffer[idx + 1] = g;
+            buffer[idx + 2] = b;
+            buffer[idx + 3] = 0xFF; // Alpha channel (unused)
+        }
+    }
+
+    XDestroyImage(image);
+    return buffer;
+}
+
+void Renderer::releaseFrameBuffer(uint8_t* buffer) {
+    if (buffer) {
+        free(buffer);  // Use free() for posix_memalign allocated memory
+    }
 }

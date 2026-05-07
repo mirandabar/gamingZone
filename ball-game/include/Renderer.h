@@ -42,6 +42,10 @@ public:
 
     void setScreenColor(XColor color);
 
+    // Video capture
+    uint8_t* captureFrame(int& outSize);
+    void releaseFrameBuffer(uint8_t* buffer);
+
 private:
     Display*    m_display;
     Window      m_window;

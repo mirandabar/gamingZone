@@ -47,6 +47,9 @@ build-*/
 # Log files
 log/
 
+# Video files
+video/
+
 # CMake generated files
 CMakeFiles/
 CMakeCache.txt
@@ -69,3 +72,4 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+
