@@ -40,4 +40,6 @@ private:
     static std::string getLevelString(LogLevel level);
     static std::string getCurrentDateTime();
     static std::string getLogFileName();
+
+    static bool printLogLevel(LogLevel level);
 };

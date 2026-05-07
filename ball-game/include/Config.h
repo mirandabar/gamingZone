@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Logger.h"
+
 // Display settings
 constexpr int DISPLAY_WIDTH  = 450;
 constexpr int DISPLAY_HEIGHT = 800;
@@ -12,3 +14,6 @@ constexpr float ARENA_RADIUS = DISPLAY_WIDTH * 0.44f;
 // Ball settings
 constexpr float BALL_RADIUS = 18.0f;
 constexpr int NUM_BALLS = 4;
+
+// Logging settings
+constexpr LogLevel LOG_LEVEL = LogLevel::WARNING; // Cambia a INFO o WARNING para menos verbosidad

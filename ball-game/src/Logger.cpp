@@ -1,4 +1,5 @@
 #include "../include/Logger.h"
+#include "../include/Config.h"
 #include <iostream>
 #include <sys/stat.h>
 
@@ -68,22 +69,36 @@ void Logger::log(LogLevel level, const std::string& file, const std::string& pro
     std::cout << logMessage << std::endl;
 }
 
+bool Logger::printLogLevel(LogLevel level) {
+    return static_cast<int>(level) >= static_cast<int>(LOG_LEVEL);
+}
+
 void Logger::debug(const std::string& file, const std::string& procedure, const std::string& message) {
-    log(LogLevel::DEBUG, file, procedure, message);
+    if (printLogLevel(LogLevel::DEBUG)) {
+        log(LogLevel::DEBUG, file, procedure, message);
+    }
 }
 
 void Logger::info(const std::string& file, const std::string& procedure, const std::string& message) {
-    log(LogLevel::INFO, file, procedure, message);
+    if (printLogLevel(LogLevel::INFO)) {
+        log(LogLevel::INFO, file, procedure, message);
+    }
 }
 
 void Logger::warning(const std::string& file, const std::string& procedure, const std::string& message) {
-    log(LogLevel::WARNING, file, procedure, message);
+    if (printLogLevel(LogLevel::WARNING)) {
+        log(LogLevel::WARNING, file, procedure, message);
+    }
 }
 
 void Logger::error(const std::string& file, const std::string& procedure, const std::string& message) {
-    log(LogLevel::ERROR, file, procedure, message);
+    if (printLogLevel(LogLevel::ERROR)) {
+        log(LogLevel::ERROR, file, procedure, message);
+    }
 }
 
 void Logger::critical(const std::string& file, const std::string& procedure, const std::string& message) {
-    log(LogLevel::CRITICAL, file, procedure, message);
+    if (printLogLevel(LogLevel::CRITICAL)) {
+        log(LogLevel::CRITICAL, file, procedure, message);
+    }
 }
