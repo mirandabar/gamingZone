@@ -15,7 +15,7 @@ public:
     bool onlyOneBallLeft() { return m_balls.size() == 1; }
     int  getWinningBallId() { return onlyOneBallLeft() ? m_balls[0].getId() : -1; }
     Ball& getWinningBall() { return m_balls[0]; }
-    XColor getWinningBallColor() { return m_balls[0].getColor(); }
+    SDL_Color getWinningBallColor() { return m_balls[0].getColor(); }
 
 private:
     Renderer& m_renderer;
@@ -35,5 +35,5 @@ private:
     void eraseLines(Ball& ball, Ball& ballLinesToDelete);
 
     void createBall();
-    Line createLine(const Vec2& ballPosition, XColor color);
+    Line createLine(const Vec2& ballPosition, SDL_Color color);
 };

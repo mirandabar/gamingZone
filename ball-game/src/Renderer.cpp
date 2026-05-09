@@ -2,7 +2,6 @@
 #include "../include/Colours.h"
 #include "../include/Logger.h"
 
-#include <X11/Xutil.h>
 #include <stdexcept>
 #include <cmath>
 #include <cstdlib>
@@ -12,98 +11,141 @@
 static const std::string FILE_NAME = "Renderer.cpp";
 
 Renderer::Renderer()
-    : m_display(nullptr), m_window(0), m_gc(0), m_backBuffer(0) {
+    : m_window(nullptr),
+      m_renderer(nullptr),
+      m_backBuffer(nullptr),
+      m_font(nullptr),
+      m_fontPath(""),
+      m_fontSize(32),
+      m_videoInitialized(false) {
     Logger::debug(FILE_NAME, "Renderer::Renderer", "Renderer constructor - initializing");
 }
 
 Renderer::~Renderer() {
     Logger::debug(FILE_NAME, "Renderer::~Renderer", "Renderer destructor - cleaning up resources");
-    if (m_display) {
-        if (m_backBuffer) XFreePixmap(m_display, m_backBuffer);
-        if (m_gc)         XFreeGC(m_display, m_gc);
-        XDestroyWindow(m_display, m_window);
-        XCloseDisplay(m_display);
-        Logger::info(FILE_NAME, "Renderer::~Renderer", "Renderer resources cleaned up successfully");
+
+    if (m_font) {
+        TTF_CloseFont(m_font);
+        m_font = nullptr;
     }
+
+    if (m_backBuffer) {
+        SDL_DestroyTexture(m_backBuffer);
+        m_backBuffer = nullptr;
+    }
+
+    if (m_renderer) {
+        SDL_DestroyRenderer(m_renderer);
+        m_renderer = nullptr;
+    }
+
+    if (m_window) {
+        SDL_DestroyWindow(m_window);
+        m_window = nullptr;
+    }
+
+    if (TTF_WasInit()) {
+        TTF_Quit();
+    }
+
+    if (m_videoInitialized) {
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+    }
+
+    Logger::info(FILE_NAME, "Renderer::~Renderer", "Renderer resources cleaned up successfully");
 }
 
 bool Renderer::init(const std::string& title) {
     Logger::info(FILE_NAME, "Renderer::init", "Initializing Renderer with title: " + title);
-    
-    m_display = XOpenDisplay(nullptr);
-    if (!m_display) {
-        Logger::critical(FILE_NAME, "Renderer::init", "FAILED: Could not open X Display");
+
+    if (SDL_WasInit(0) == 0) {
+        if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+            Logger::critical(FILE_NAME, "Renderer::init", "FAILED: SDL_Init - " + std::string(SDL_GetError()));
+            return false;
+        }
+    } else if (SDL_WasInit(SDL_INIT_VIDEO) == 0) {
+        if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+            Logger::critical(FILE_NAME, "Renderer::init", "FAILED: SDL_InitSubSystem - " + std::string(SDL_GetError()));
+            return false;
+        }
+    }
+
+    if (SDL_WasInit(SDL_INIT_VIDEO) == 0) {
+        Logger::critical(FILE_NAME, "Renderer::init", "FAILED: SDL video subsystem not available");
         return false;
     }
 
-    int screen = DefaultScreen(m_display);
+    m_videoInitialized = true;
 
-    // Ventana con fondo negro
-    m_window = XCreateSimpleWindow(
-        m_display, RootWindow(m_display, screen),
-        0, 0, WIDTH, HEIGHT, 0,
-        BlackPixel(m_display, screen),
-        BlackPixel(m_display, screen)
-    );
+    if (TTF_WasInit() == 0 && TTF_Init() != 0) {
+        Logger::critical(FILE_NAME, "Renderer::init", "FAILED: TTF_Init - " + std::string(TTF_GetError()));
+        return false;
+    }
 
-    XStoreName(m_display, m_window, title.c_str());
+    m_window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
+    if (!m_window) {
+        Logger::critical(FILE_NAME, "Renderer::init", "FAILED: SDL_CreateWindow - " + std::string(SDL_GetError()));
+        return false;
+    }
 
-    // Solo escuchamos estos eventos
-    XSelectInput(m_display, m_window, ExposureMask | KeyPressMask | StructureNotifyMask);
-    XMapWindow(m_display, m_window);
+    m_renderer = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    if (!m_renderer) {
+        Logger::critical(FILE_NAME, "Renderer::init", "FAILED: SDL_CreateRenderer - " + std::string(SDL_GetError()));
+        return false;
+    }
 
-    // Graphics Context
-    m_gc = XCreateGC(m_display, m_window, 0, nullptr);
+    m_backBuffer = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, WIDTH, HEIGHT);
+    if (!m_backBuffer) {
+        Logger::critical(FILE_NAME, "Renderer::init", "FAILED: SDL_CreateTexture - " + std::string(SDL_GetError()));
+        return false;
+    }
 
-    // Back buffer (doble buffer manual)
-    m_backBuffer = XCreatePixmap(m_display, m_window, WIDTH, HEIGHT,
-                                 DefaultDepth(m_display, screen));
+    SDL_SetRenderTarget(m_renderer, m_backBuffer);
+    SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
 
-    // Set a beautiful font and large size
-    setFont("-*-lucida-bright-*-r-*-*-500-*-*-*-*-*-iso8859-1");
+    m_fontPath = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
+    if (!loadFont()) {
+        Logger::warning(FILE_NAME, "Renderer::init", "Default font not loaded; text rendering disabled");
+    }
 
-    XFlush(m_display);
     Logger::info(FILE_NAME, "Renderer::init", "Renderer initialized successfully - Window size: " + 
                 std::to_string(WIDTH) + "x" + std::to_string(HEIGHT));
     return true;
 }
 
-unsigned long Renderer::allocColor(int r, int g, int b) {
+SDL_Color Renderer::allocColor(int r, int g, int b) {
     Logger::debug(FILE_NAME, "Renderer::allocColor", "Allocating color RGB(" + std::to_string(r) + ", " + 
                  std::to_string(g) + ", " + std::to_string(b) + ")");
-    XColor color;
-    color.red   = r * 257; // X11 usa rango 0-65535
-    color.green = g * 257;
-    color.blue  = b * 257;
-    color.flags = DoRed | DoGreen | DoBlue;
-    XAllocColor(m_display, DefaultColormap(m_display, DefaultScreen(m_display)), &color);
-    return color.pixel;
+    SDL_Color color{static_cast<Uint8>(r), static_cast<Uint8>(g), static_cast<Uint8>(b), 255};
+    return color;
 }
 
 void Renderer::clear() {
-    XSetForeground(m_display, m_gc, Colours::blackColor.pixel);
-    XFillRectangle(m_display, m_backBuffer, m_gc, 0, 0, WIDTH, HEIGHT);
+    SDL_SetRenderTarget(m_renderer, m_backBuffer);
+    SDL_SetRenderDrawColor(m_renderer, Colours::blackColor.r, Colours::blackColor.g, Colours::blackColor.b, Colours::blackColor.a);
+    SDL_RenderClear(m_renderer);
 }
 
 // Algoritmo de Bresenham para círculo
-// Dibuja los 8 octantes simétricamente → muy eficiente, sin trigonometría
+// Dibuja los 8 octantes simétricamente -> muy eficiente, sin trigonometria
 void Renderer::drawCirclePoints(int cx, int cy, int px, int py) {
-    XDrawPoint(m_display, m_backBuffer, m_gc, cx + px, cy + py);
-    XDrawPoint(m_display, m_backBuffer, m_gc, cx - px, cy + py);
-    XDrawPoint(m_display, m_backBuffer, m_gc, cx + px, cy - py);
-    XDrawPoint(m_display, m_backBuffer, m_gc, cx - px, cy - py);
-    XDrawPoint(m_display, m_backBuffer, m_gc, cx + py, cy + px);
-    XDrawPoint(m_display, m_backBuffer, m_gc, cx - py, cy + px);
-    XDrawPoint(m_display, m_backBuffer, m_gc, cx + py, cy - px);
-    XDrawPoint(m_display, m_backBuffer, m_gc, cx - py, cy - px);
+    SDL_RenderDrawPoint(m_renderer, cx + px, cy + py);
+    SDL_RenderDrawPoint(m_renderer, cx - px, cy + py);
+    SDL_RenderDrawPoint(m_renderer, cx + px, cy - py);
+    SDL_RenderDrawPoint(m_renderer, cx - px, cy - py);
+    SDL_RenderDrawPoint(m_renderer, cx + py, cy + px);
+    SDL_RenderDrawPoint(m_renderer, cx - py, cy + px);
+    SDL_RenderDrawPoint(m_renderer, cx + py, cy - px);
+    SDL_RenderDrawPoint(m_renderer, cx - py, cy - px);
 }
 
-void Renderer::drawCircle(Vec2 center, float radius, XColor color) {
-    XSetForeground(m_display, m_gc, color.pixel);
+void Renderer::drawCircle(Vec2 center, float radius, SDL_Color color) {
+    SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
 
-    int cx = (int)center.x;
-    int cy = (int)center.y;
-    int r  = (int)radius;
+    int cx = static_cast<int>(center.x);
+    int cy = static_cast<int>(center.y);
+    int r  = static_cast<int>(radius);
     int x  = 0, y = r;
     int d  = 3 - 2 * r; // decisor de Bresenham
 
@@ -119,19 +161,23 @@ void Renderer::drawCircle(Vec2 center, float radius, XColor color) {
     }
 }
 
-void Renderer::drawLine(Vec2 start, Vec2 end, XColor color) {
-    XSetForeground(m_display, m_gc, color.pixel);
-    XDrawLine(m_display, m_backBuffer, m_gc,
-              (int)start.x, (int)start.y,
-              (int)end.x, (int)end.y);
+void Renderer::drawLine(Vec2 start, Vec2 end, SDL_Color color) {
+    SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
+    SDL_RenderDrawLine(m_renderer, static_cast<int>(start.x), static_cast<int>(start.y),
+                       static_cast<int>(end.x), static_cast<int>(end.y));
 }
 
-void Renderer::drawFilledCircle(Vec2 center, float radius, XColor color) {
-    XSetForeground(m_display, m_gc, color.pixel);
-    int x = (int)(center.x - radius);
-    int y = (int)(center.y - radius);
-    int d = (int)(radius * 2);
-    XFillArc(m_display, m_backBuffer, m_gc, x, y, d, d, 0, 360 * 64);
+void Renderer::drawFilledCircle(Vec2 center, float radius, SDL_Color color) {
+    SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
+
+    int cx = static_cast<int>(center.x);
+    int cy = static_cast<int>(center.y);
+    int r = static_cast<int>(radius);
+
+    for (int dy = -r; dy <= r; ++dy) {
+        int dx = static_cast<int>(std::sqrt((r * r) - (dy * dy)));
+        SDL_RenderDrawLine(m_renderer, cx - dx, cy + dy, cx + dx, cy + dy);
+    }
 }
 
 void Renderer::drawBall(const Ball& ball) {
@@ -157,27 +203,22 @@ void Renderer::updateBalls() {
 }
 
 void Renderer::present() {
-    //clear(); // Limpiar el fondo antes de copiar el back buffer
-    XCopyArea(m_display, m_backBuffer, m_window, m_gc, 0, 0, WIDTH, HEIGHT, 0, 0);
-    XFlush(m_display);
+    SDL_SetRenderTarget(m_renderer, nullptr);
+    SDL_RenderCopy(m_renderer, m_backBuffer, nullptr, nullptr);
+    SDL_RenderPresent(m_renderer);
+    SDL_SetRenderTarget(m_renderer, m_backBuffer);
 }
 
 bool Renderer::pollEvents() {
-    while (XPending(m_display)) {
-        XEvent e;
-        XNextEvent(m_display, &e);
-
-        if (e.type == KeyPress) {
+    SDL_Event e;
+    while (SDL_PollEvent(&e)) {
+        if (e.type == SDL_QUIT) {
+            Logger::info(FILE_NAME, "Renderer::pollEvents", "Window close detected - exiting application");
+            return false;
+        }
+        if (e.type == SDL_KEYDOWN) {
             Logger::info(FILE_NAME, "Renderer::pollEvents", "Key press detected - exiting application");
             return false; // cualquier tecla = salir
-        }
-        if (e.type == ClientMessage) {
-            Logger::info(FILE_NAME, "Renderer::pollEvents", "Client message event - exiting application");
-            return false;
-        }
-        if (e.type == DestroyNotify) {
-            Logger::info(FILE_NAME, "Renderer::pollEvents", "Window destroy event - exiting application");
-            return false;
         }
     }
     return true;
@@ -185,104 +226,110 @@ bool Renderer::pollEvents() {
 
 void Renderer::showMessage(const std::string& message) {
     Logger::debug(FILE_NAME, "Renderer::showMessage", "Displaying message: " + message);
-    XSetForeground(m_display, m_gc, Colours::whiteColor.pixel);
-    
-    // Handle multiline messages by parsing newlines
-    int lineHeight = 30;
-    int startY = HEIGHT / 2 - 30;
-    int lineNum = 0;
+
+    if (!m_font) {
+        Logger::warning(FILE_NAME, "Renderer::showMessage", "Font not loaded - cannot render text");
+        return;
+    }
+
+    SDL_SetRenderTarget(m_renderer, m_backBuffer);
+
+    std::vector<std::string> lines;
     size_t pos = 0;
-    
     while (pos < message.length()) {
         size_t newlinePos = message.find('\n', pos);
         if (newlinePos == std::string::npos) {
             newlinePos = message.length();
         }
-        
-        std::string line = message.substr(pos, newlinePos - pos);
-        int y = startY + (lineNum * lineHeight);
-        
-        // Center the text horizontally
-        int textWidth = line.length() * 8; // Approximate character width
-        int x = (WIDTH - textWidth) / 2;
-        
-        XDrawString(m_display, m_backBuffer, m_gc, x, y, line.c_str(), line.length());
-        
-        lineNum++;
+        lines.emplace_back(message.substr(pos, newlinePos - pos));
         pos = newlinePos + 1;
     }
-    
+
+    if (lines.empty()) {
+        return;
+    }
+
+    int lineSkip = TTF_FontLineSkip(m_font);
+    int totalHeight = lineSkip * static_cast<int>(lines.size());
+    int startY = (HEIGHT - totalHeight) / 2;
+
+    SDL_Color textColor = Colours::whiteColor;
+
+    for (size_t i = 0; i < lines.size(); ++i) {
+        SDL_Surface* surface = TTF_RenderUTF8_Blended(m_font, lines[i].c_str(), textColor);
+        if (!surface) {
+            Logger::warning(FILE_NAME, "Renderer::showMessage", "Failed to render text surface");
+            continue;
+        }
+
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(m_renderer, surface);
+        if (!texture) {
+            Logger::warning(FILE_NAME, "Renderer::showMessage", "Failed to create text texture");
+            SDL_FreeSurface(surface);
+            continue;
+        }
+
+        SDL_Rect dst{};
+        dst.w = surface->w;
+        dst.h = surface->h;
+        dst.x = (WIDTH - dst.w) / 2;
+        dst.y = startY + static_cast<int>(i) * lineSkip;
+
+        SDL_FreeSurface(surface);
+        SDL_RenderCopy(m_renderer, texture, nullptr, &dst);
+        SDL_DestroyTexture(texture);
+    }
+
     present();
 }
 
 void Renderer::setFontSize(int size) {
-    XFontStruct* font = XLoadQueryFont(m_display, ("-*-helvetica-bold-r-normal--" + std::to_string(size) + "-*" + "-*-*-*-*-iso8859-1").c_str());
-    if (!font) {
-        Logger::warning(FILE_NAME, "Renderer::setFontSize", "Failed to load font. Falling back to default.");
+    if (size <= 0) {
+        Logger::warning(FILE_NAME, "Renderer::setFontSize", "Invalid font size requested");
         return;
     }
-    XSetFont(m_display, m_gc, font->fid);
+
+    m_fontSize = size;
+    if (!loadFont()) {
+        Logger::warning(FILE_NAME, "Renderer::setFontSize", "Failed to load font at new size");
+    }
 }
 
 void Renderer::setFont(const std::string& fontName) {
-    XFontStruct* font = XLoadQueryFont(m_display, fontName.c_str());
-    if (!font) {
+    m_fontPath = fontName;
+    if (!loadFont()) {
         Logger::warning(FILE_NAME, "Renderer::setFont", "Failed to load font: " + fontName);
-        return;
     }
-    XSetFont(m_display, m_gc, font->fid);
 }
 
-void Renderer::setScreenColor(XColor color) {
-    // Create a semi-transparent overlay
-    XSetForeground(m_display, m_gc, color.pixel);
-    XFillRectangle(m_display, m_backBuffer, m_gc, 0, 0, WIDTH, HEIGHT);
-    XCopyArea(m_display, m_backBuffer, m_window, m_gc, 0, 0, WIDTH, HEIGHT, 0, 0);
-    XFlush(m_display);
+void Renderer::setScreenColor(SDL_Color color) {
+    SDL_SetRenderTarget(m_renderer, m_backBuffer);
+    SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
+    SDL_RenderClear(m_renderer);
+    present();
 }
 
 uint8_t* Renderer::captureFrame(int& outSize) {
     Logger::debug(FILE_NAME, "Renderer::captureFrame", "Capturing frame from backbuffer");
-    
-    XImage* image = XGetImage(m_display, m_backBuffer, 0, 0, WIDTH, HEIGHT, AllPlanes, ZPixmap);
-    if (!image) {
-        Logger::error(FILE_NAME, "Renderer::captureFrame", "Failed to capture image from backbuffer");
+
+    int stride = ((WIDTH * 4 + 31) / 32) * 32; // Align to 32 bytes
+    outSize = stride * HEIGHT;
+
+    uint8_t* buffer = nullptr;
+    if (posix_memalign((void**)&buffer, 32, outSize) != 0) {
+        Logger::error(FILE_NAME, "Renderer::captureFrame", "Failed to allocate aligned memory");
         outSize = 0;
         return nullptr;
     }
 
-    // Allocate buffer aligned to 32 bytes for SIMD optimization (FFmpeg requirement)
-    // Expected size: WIDTH * HEIGHT * 4 bytes (RGBA)
-    int stride = ((WIDTH * 4 + 31) / 32) * 32; // Align to 32 bytes
-    outSize = stride * HEIGHT;
-    
-    uint8_t* buffer = nullptr;
-    if (posix_memalign((void**)&buffer, 32, outSize) != 0) {
-        Logger::error(FILE_NAME, "Renderer::captureFrame", "Failed to allocate aligned memory");
-        XDestroyImage(image);
+    SDL_SetRenderTarget(m_renderer, m_backBuffer);
+    if (SDL_RenderReadPixels(m_renderer, nullptr, SDL_PIXELFORMAT_RGBA8888, buffer, stride) != 0) {
+        Logger::error(FILE_NAME, "Renderer::captureFrame", "Failed to capture image: " + std::string(SDL_GetError()));
+        free(buffer);
+        outSize = 0;
         return nullptr;
     }
 
-    // Copy pixel data from XImage to buffer
-    // XImage data layout depends on the server - we need to convert to RGB32
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
-            unsigned long pixel = XGetPixel(image, x, y);
-            
-            // Extract RGB components (assuming 24-bit or 32-bit color)
-            uint8_t r = (pixel >> 16) & 0xFF;
-            uint8_t g = (pixel >> 8) & 0xFF;
-            uint8_t b = pixel & 0xFF;
-            
-            int idx = (y * stride) + (x * 4);
-            buffer[idx + 0] = r;
-            buffer[idx + 1] = g;
-            buffer[idx + 2] = b;
-            buffer[idx + 3] = 0xFF; // Alpha channel (unused)
-        }
-    }
-
-    XDestroyImage(image);
     return buffer;
 }
 
@@ -290,4 +337,24 @@ void Renderer::releaseFrameBuffer(uint8_t* buffer) {
     if (buffer) {
         free(buffer);  // Use free() for posix_memalign allocated memory
     }
+}
+
+bool Renderer::loadFont() {
+    if (m_font) {
+        TTF_CloseFont(m_font);
+        m_font = nullptr;
+    }
+
+    if (m_fontPath.empty() || m_fontSize <= 0) {
+        Logger::warning(FILE_NAME, "Renderer::loadFont", "Font path or size not set");
+        return false;
+    }
+
+    m_font = TTF_OpenFont(m_fontPath.c_str(), m_fontSize);
+    if (!m_font) {
+        Logger::warning(FILE_NAME, "Renderer::loadFont", "Failed to load font: " + m_fontPath + " - " + std::string(TTF_GetError()));
+        return false;
+    }
+
+    return true;
 }

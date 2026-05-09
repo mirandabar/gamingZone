@@ -84,7 +84,7 @@ int main() {
 
         Audio::playSound("/root/gitRepos/gamingZone/ball-game/audio/winnerSound.wav");
         
-        XColor winningColor = gameManager.getWinningBallColor();
+        SDL_Color winningColor = gameManager.getWinningBallColor();
         renderer.setScreenColor(winningColor);
         
         renderer.showMessage("!!! WINNER !!!");

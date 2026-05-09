@@ -1,14 +1,14 @@
 #pragma once
 
 #include "Vec2.h"
-#include <X11/Xutil.h>
+#include <SDL2/SDL.h>
 #include <vector>
 #include "Line.h"
 
 class Ball
 {
 private:
-    XColor color;
+    SDL_Color color;
     float radius;
     Vec2 position;
     Vec2 velocity;
@@ -17,7 +17,7 @@ private:
     std::vector<Line> lines; // Líneas asociadas a la bola
 
 public:
-    Ball(XColor color, float radius, Vec2 position);
+    Ball(SDL_Color color, float radius, Vec2 position);
     ~Ball();
     
     // Rule of Five
@@ -27,14 +27,14 @@ public:
     Ball& operator=(Ball&&) = default;
 
     // Getters
-    XColor getColor() const;
+    SDL_Color getColor() const;
     float getRadius() const;
     Vec2 getPosition() const;
     Vec2 getVelocity() const;
     int getId() const;
 
     // Setters
-    void setColor(XColor color);
+    void setColor(SDL_Color color);
     void setRadius(float radius); 
     void setPosition(Vec2 position);
     void setVelocity(Vec2 velocity);

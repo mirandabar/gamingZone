@@ -6,7 +6,7 @@ static const std::string FILE_NAME = "Ball.cpp";
 
 int Ball::nextId = 0; 
 
-Ball::Ball(XColor color, float radius, Vec2 position)
+Ball::Ball(SDL_Color color, float radius, Vec2 position)
     : id(nextId++)
 {
     Logger::debug(FILE_NAME, "Ball::Ball", "Creating new Ball with id: " + std::to_string(id));
@@ -26,7 +26,7 @@ Ball::~Ball()
 // Getters
 // ----------
 
-XColor Ball::getColor() const
+SDL_Color Ball::getColor() const
 {
     return this->color;
 }
@@ -54,7 +54,7 @@ int Ball::getId() const {
 // Setters 
 // ----------
 
-void Ball::setColor(XColor color)
+void Ball::setColor(SDL_Color color)
 {
     this->color = color;
 }

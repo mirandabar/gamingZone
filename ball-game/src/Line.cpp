@@ -5,7 +5,7 @@ static const std::string FILE_NAME = "Line.cpp";
 
 int Line::nextId = 0;
 
-Line::Line(Vec2 start, Vec2 end, XColor color)
+Line::Line(Vec2 start, Vec2 end, SDL_Color color)
     : start(start), end(end), color(color), id(nextId++) {
     Logger::debug(FILE_NAME, "Line::Line", "Creating line with id: " + std::to_string(id) + " from (" + 
                  std::to_string(start.x) + ", " + std::to_string(start.y) + ") to (" + 
@@ -21,7 +21,7 @@ Vec2 Line::getEnd() const {
     return end;
 }
 
-XColor Line::getColor() const {
+SDL_Color Line::getColor() const {
     return color;
 }
 
@@ -42,7 +42,7 @@ void Line::setEnd(Vec2 end) {
     this->end = end;
 }
 
-void Line::setColor(XColor color) {
+void Line::setColor(SDL_Color color) {
     Logger::debug(FILE_NAME, "Line::setColor", "Setting line color");
     this->color = color;
 }

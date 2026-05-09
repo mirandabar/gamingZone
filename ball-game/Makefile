@@ -1,6 +1,6 @@
 CXX      = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -fdiagnostics-color=always -g -Iinclude
-LDFLAGS  = -lX11 -lSDL2 -lSDL2_mixer -lavcodec -lavformat -lavutil -lswscale
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -fdiagnostics-color=always -g -Iinclude $(shell pkg-config --cflags sdl2 SDL2_ttf)
+LDFLAGS  = -lSDL2_mixer -lavcodec -lavformat -lavutil -lswscale $(shell pkg-config --libs sdl2 SDL2_ttf)
 
 SRC = src/*.cpp
 OUT = build/ball-game

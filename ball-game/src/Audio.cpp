@@ -9,9 +9,16 @@ bool Audio::initialized = false;
 bool Audio::initialize() {
     if (initialized) return true;
 
-    if (SDL_Init(SDL_INIT_AUDIO) < 0) {
-        std::cerr << "[Audio] Error: SDL_Init failed - " << SDL_GetError() << std::endl;
-        return false;
+    if (SDL_WasInit(0) == 0) {
+        if (SDL_Init(SDL_INIT_AUDIO) < 0) {
+            std::cerr << "[Audio] Error: SDL_Init failed - " << SDL_GetError() << std::endl;
+            return false;
+        }
+    } else if (SDL_WasInit(SDL_INIT_AUDIO) == 0) {
+        if (SDL_InitSubSystem(SDL_INIT_AUDIO) < 0) {
+            std::cerr << "[Audio] Error: SDL_InitSubSystem failed - " << SDL_GetError() << std::endl;
+            return false;
+        }
     }
 
     int flags = MIX_INIT_FLAC | MIX_INIT_MOD | MIX_INIT_MP3 | MIX_INIT_OGG;
@@ -21,7 +28,7 @@ bool Audio::initialize() {
 
     if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096) == -1) {
         std::cerr << "[Audio] Error: Mix_OpenAudio failed - " << Mix_GetError() << std::endl;
-        SDL_Quit();
+        SDL_QuitSubSystem(SDL_INIT_AUDIO);
         return false;
     }
 
@@ -36,7 +43,7 @@ void Audio::shutdown() {
 
     Mix_CloseAudio();
     Mix_Quit();
-    SDL_Quit();
+    SDL_QuitSubSystem(SDL_INIT_AUDIO);
     initialized = false;
     std::cout << "[Audio] Sistema de audio cerrado" << std::endl;
 }

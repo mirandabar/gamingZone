@@ -1,5 +1,7 @@
 #pragma once
-#include <X11/Xlib.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
+#include <cstdint>
 #include <string>
 #include "Ball.h"
 #include "Vec2.h"
@@ -23,14 +25,14 @@ public:
 
     bool init(const std::string& title);
     void clear();                                         
-    void drawCircle(Vec2 center, float radius, XColor color);  
-    void drawLine(Vec2 start, Vec2 end, XColor color);
-    void drawFilledCircle(Vec2 center, float radius, XColor color); 
+    void drawCircle(Vec2 center, float radius, SDL_Color color);  
+    void drawLine(Vec2 start, Vec2 end, SDL_Color color);
+    void drawFilledCircle(Vec2 center, float radius, SDL_Color color); 
     void drawBall(const Ball& ball);                       
     void present();                                        
     bool pollEvents();                                     
 
-    unsigned long allocColor(int r, int g, int b);
+    SDL_Color allocColor(int r, int g, int b);
 
     void updateBalls(); 
     void eraseBall(const Ball& ball);
@@ -40,18 +42,22 @@ public:
     void setFontSize(int size);
     void setFont(const std::string& fontName);
 
-    void setScreenColor(XColor color);
+    void setScreenColor(SDL_Color color);
 
     // Video capture
     uint8_t* captureFrame(int& outSize);
     void releaseFrameBuffer(uint8_t* buffer);
 
 private:
-    Display*    m_display;
-    Window      m_window;
-    GC          m_gc;          // Graphics Context
-    Pixmap      m_backBuffer;  // doble buffer para evitar parpadeo
+    SDL_Window*   m_window;
+    SDL_Renderer* m_renderer;
+    SDL_Texture*  m_backBuffer;
+    TTF_Font*     m_font;
+    std::string   m_fontPath;
+    int           m_fontSize;
+    bool          m_videoInitialized;
     std::unordered_map<int, Ball> ballsMap; // Mapa de bolas por ID
 
+    bool          loadFont();
     void          drawCirclePoints(int cx, int cy, int x, int y); // Bresenham
 };

@@ -1,32 +1,33 @@
 #pragma once
 
 #include "Renderer.h"
-#include <X11/Xlib.h>
+#include <SDL2/SDL.h>
+#include <string>
 
 class Colours
 {
 private:
     Renderer& renderer;
-    XColor fillStruct(unsigned short r, unsigned short g, unsigned short b);
+    SDL_Color fillStruct(unsigned short r, unsigned short g, unsigned short b);
 public:
     Colours(Renderer& renderer) : renderer(renderer) {};
     ~Colours() = default;
 
-    static XColor redColor;
-    static XColor blueColor;
-    static XColor whiteColor;
-    static XColor blackColor;
-    static XColor orangeColor;
-    static XColor purpleColor;
-    static XColor pinkColor;
-    static XColor greenColor;
-    static XColor brownColor;
-    static XColor yellowColor;
-    static XColor cyanColor;
-    static XColor grayColor;
+    static SDL_Color redColor;
+    static SDL_Color blueColor;
+    static SDL_Color whiteColor;
+    static SDL_Color blackColor;
+    static SDL_Color orangeColor;
+    static SDL_Color purpleColor;
+    static SDL_Color pinkColor;
+    static SDL_Color greenColor;
+    static SDL_Color brownColor;
+    static SDL_Color yellowColor;
+    static SDL_Color cyanColor;
+    static SDL_Color grayColor;
 
     // Initializes colors using the renderer's colormap
     static void initialize(Renderer& renderer);
-    static XColor setBallColor(int number);
-    static std::string getColorName(const XColor& color);
+    static SDL_Color setBallColor(int number);
+    static std::string getColorName(const SDL_Color& color);
 };

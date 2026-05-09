@@ -140,8 +140,8 @@ bool VideoRecorder::setupCodecAndContext() {
         return false;
     }
 
-    // Create software scaler (to convert RGB32 to YUV420p with high quality)
-    m_swsContext = sws_getContext(m_width, m_height, AV_PIX_FMT_RGB32,
+    // Create software scaler (to convert RGBA to YUV420p with high quality)
+    m_swsContext = sws_getContext(m_width, m_height, AV_PIX_FMT_RGBA,
                                   m_width, m_height, AV_PIX_FMT_YUV420P,
                                   SWS_GAUSS, nullptr, nullptr, nullptr);  // SWS_GAUSS for better quality
     if (!m_swsContext) {

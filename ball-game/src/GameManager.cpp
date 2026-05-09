@@ -40,7 +40,7 @@ void GameManager::generateRandomPosition(Vec2& position) {
                  std::to_string(position.x) + ", " + std::to_string(position.y) + ")");
 }
 
-Line GameManager::createLine(const Vec2& ballPosition, XColor color) {
+Line GameManager::createLine(const Vec2& ballPosition, SDL_Color color) {
     Vec2 direction(ballPosition.x - m_arenaCenter.x, ballPosition.y - m_arenaCenter.y);
     float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
 
@@ -66,7 +66,7 @@ void GameManager::createBall() {
     generateRandomVelocity(initialVelocity);
 
     int ballIndex = m_balls.size() % 10; // Para asignar colores cíclicamente
-    XColor ballColor = Colours::setBallColor(ballIndex);
+    SDL_Color ballColor = Colours::setBallColor(ballIndex);
     Ball newBall(ballColor, ballRadius, initPosition);
 
     Line initLine = createLine(initPosition, ballColor);
