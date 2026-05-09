@@ -1,47 +1,47 @@
 #pragma once
 
-#include <string>
 #include <cstdint>
-#include <memory>
+#include <string>
 
-// FFmpeg forward declarations
+extern "C" {
 struct AVFormatContext;
 struct AVCodecContext;
 struct AVStream;
 struct AVFrame;
+struct AVPacket;
 struct SwsContext;
+}
 
 class VideoRecorder {
 public:
-    VideoRecorder(const std::string& filePath, int width, int height, int fps = 60);
-    ~VideoRecorder();
-    
-    // Rule of Five - forbid copying system resources, but allow move
-    VideoRecorder(const VideoRecorder&) = delete;
-    VideoRecorder& operator=(const VideoRecorder&) = delete;
-    VideoRecorder(VideoRecorder&&) = default;
-    VideoRecorder& operator=(VideoRecorder&&) = default;
+	VideoRecorder(const std::string& filename, int width, int height, int fps);
+	~VideoRecorder();
 
-    bool initialize();
-    bool captureFrame(const uint8_t* pixelData, int dataSize);
-    bool finalize();
+	VideoRecorder(const VideoRecorder&) = delete;
+	VideoRecorder& operator=(const VideoRecorder&) = delete;
+	VideoRecorder(VideoRecorder&&) = delete;
+	VideoRecorder& operator=(VideoRecorder&&) = delete;
 
-    bool isInitialized() const { return m_isInitialized; }
+	bool initialize();
+	void captureFrame(const uint8_t* data, int size);
+	void finalize();
+	bool isInitialized() const { return m_initialized; }
 
 private:
-    std::string m_filePath;
-    int m_width;
-    int m_height;
-    int m_fps;
-    bool m_isInitialized;
-    
-    AVFormatContext* m_formatContext;
-    AVCodecContext* m_codecContext;
-    AVStream* m_stream;
-    AVFrame* m_frame;
-    SwsContext* m_swsContext;
-    int64_t m_frameCount;
+	bool encodeFrame(const uint8_t* data, int size);
+	void cleanup();
 
-    bool setupCodecAndContext();
-    bool writeFrame(AVFrame* frame);
+	std::string m_filename;
+	int m_width;
+	int m_height;
+	int m_fps;
+	bool m_initialized;
+	int64_t m_frameIndex;
+	AVFormatContext* m_formatCtx;
+	AVCodecContext* m_codecCtx;
+	AVStream* m_stream;
+	AVFrame* m_frame;
+	AVPacket* m_packet;
+	SwsContext* m_swsCtx;
 };
+

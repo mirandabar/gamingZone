@@ -312,7 +312,8 @@ void Renderer::setScreenColor(SDL_Color color) {
 uint8_t* Renderer::captureFrame(int& outSize) {
     Logger::debug(FILE_NAME, "Renderer::captureFrame", "Capturing frame from backbuffer");
 
-    int stride = ((WIDTH * 4 + 31) / 32) * 32; // Align to 32 bytes
+    const int bytesPerPixel = 3; // RGB24
+    int stride = ((WIDTH * bytesPerPixel + 31) / 32) * 32; // Align to 32 bytes
     outSize = stride * HEIGHT;
 
     uint8_t* buffer = nullptr;
@@ -323,7 +324,7 @@ uint8_t* Renderer::captureFrame(int& outSize) {
     }
 
     SDL_SetRenderTarget(m_renderer, m_backBuffer);
-    if (SDL_RenderReadPixels(m_renderer, nullptr, SDL_PIXELFORMAT_RGBA8888, buffer, stride) != 0) {
+    if (SDL_RenderReadPixels(m_renderer, nullptr, SDL_PIXELFORMAT_RGB24, buffer, stride) != 0) {
         Logger::error(FILE_NAME, "Renderer::captureFrame", "Failed to capture image: " + std::string(SDL_GetError()));
         free(buffer);
         outSize = 0;
